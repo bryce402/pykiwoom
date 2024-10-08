@@ -40,7 +40,36 @@ class Kiwoom:
 
         if login:
             self.CommConnect()
+            
+        # --------------------------------------------------------------------------------------------------------------
+        # 추가된 코드
+        # openapi 호출 횟수를 저장하는 변수 키움의 호출제한으로 인한 동작 중단을 회피하기 위한 코드
+        # --------------------------------------------------------------------------------------------------------------
+        self.rq_count = 0
+        # api를 최대 몇 번까지 호출 하고 봇을 끌지 설정 하는 옵션
+        self.max_api_call = 999
+        self.call_time = datetime.datetime.now()
+        # --------------------------------------------------------------------------------------------------------------
 
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # 추가된 코드
+    # openapi 조회 카운트를 체크 하고 cf.max_api_call 횟수 만큼 카운트 되면 봇이 꺼지게 하는 함수-
+    def exit_check(self):
+        rq_delay = datetime.timedelta(seconds=0.6)
+        time_diff = datetime.datetime.now() - self.call_time
+        if rq_delay > datetime.datetime.now() - self.call_time:
+            time.sleep((rq_delay - time_diff).total_seconds())
+
+        self.rq_count += 1
+        # openapi 조회 count 출력
+        print(f"TR요청 수 : {self.rq_count} ")
+        if self.rq_count > self.max_api_call:
+            print(f"rq_count: {self.rq_count}")
+            sys.exit(1)
+    # ------------------------------------------------------------------------------------------------------------------
+
+    
     #-------------------------------------------------------------------------------------------------------------------
     # callback functions
     #-------------------------------------------------------------------------------------------------------------------
@@ -242,6 +271,7 @@ class Kiwoom:
                 pythoncom.PumpWaitingMessages()
 
     def CommRqData(self, rqname, trcode, next, screen):
+        self.exit_check()
         """
         TR을 서버로 송신합니다.
         :param rqname: 사용자가 임의로 지정할 수 있는 요청 이름
